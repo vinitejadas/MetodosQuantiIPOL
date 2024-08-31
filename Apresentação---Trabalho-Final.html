@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Análise do Protagonismo Programático e sua relação com Migração Partidária na Câmara dos Deputados (56ª Legislatura)</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Vinícius Tejadas Maia" />
+    <meta name="date" content="2024-08-31" />
+    <script src="libs/header-attrs-2.28/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <script src="libs/kePrint-0.0.1/kePrint.js"></script>
+    <link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Análise do Protagonismo Programático e sua relação com Migração Partidária na Câmara dos Deputados (56ª Legislatura)
+]
+.author[
+### Vinícius Tejadas Maia
+]
+.date[
+### 2024-08-31
+]
+
+---
+
+
+&lt;style&gt;
+.remark-slide-content img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+&lt;/style&gt;
+
+
+## Objeto
+### Tema Central
+O objeto deste trabalho é a migração partidária, compreendida como a troca de partido político efetuada por parlamentar durante o exercício do mandato eletivo. 
+
+---
+
+## Questões de Pesquisa
+- Existe uma relação significativa entre o protagonismo programático e a migração partidária?
+- Qual a diferença no protagonismo programático entre deputados que migraram e os que não migraram?
+
+
+---
+
+## Objetivos
+1. Analisar a relação entre o protagonismo programático e os padrões de migração partidária na Câmara dos Deputados;
+    1.1. Criar índice de protagonismo programático a partir da Análise de Componentes Principais (PCA); 
+    1.2. Empreender testes estatísticos para entender a relação entre as duas variáveis (regressão logística, teste t e diferença entre médias).
+
+
+---
+
+## Contexto
+### Justificativa
+- A migração partidária é fenômeno capaz de alterar a correlação de forças entre os partidos dentro do Parlamento. Compreender os tipos de incentivos que ensejam a decisão de mudar de partido pode contribuir à literatura sobre Partidos Políticos e Estudos Legislativos ao sopesar como dinâmicas próprias da atuação legislativa e dos papéis desempenhados pelos legisladores podem influenciar a decisão pela migração partidária. 
+
+---
+
+## Método 
+### Coleta dos Dados
+- Os dados relacionados à construção do índice de protagonismo programático foram coletados da plataforma de Dados Abertos da Câmara dos Deputados; 
+- Os dados relacionados à migração partidária foram acessados via pedido de acesso à informação e fornecidos pela Câmara dos Deputados em formato excel. 
+
+
+
+---
+
+### Manipulação dos dados
+- Os dados que constituem as variáveis "audiência pública", "autoria de PL e PLP" e "coordenação de frente parlamentar" foram agregados em números absolutos para cada parlamentar dentro da 56ª legislatura. A partir dos valores atribuídos a cada parlamentar, procedeu-se à Análise de Componentes Principais para elaboração do índice de protagonismo programático. Os gráficos a seguir representam a distribuição das variáveis a partir do z-valor. 
+
+
+
+---
+
+### Distribuição dos deputados em relação à variável "audiencias_publicas"
+![](Apresentação---Trabalho-Final_files/figure-html/Distribuição da variável audiência pública-1.png)&lt;!-- --&gt;
+
+---
+
+### Distribuição dos deputados em relação à variável "autoria de PL e PLP"
+
+![](Apresentação---Trabalho-Final_files/figure-html/Distribuição da variável autoria de PL e PLP-1.png)&lt;!-- --&gt;
+
+---
+
+### Distribuição dos deputados em relação à variável "coordenação de frente parlamentar"
+
+![](Apresentação---Trabalho-Final_files/figure-html/Distribuição da variável coordenação de frente parlamentar-1.png)&lt;!-- --&gt;
+
+---
+
+## Análise de Componentes Principais 
+
+- Para criar o índice de protagonismo, utilizou-se a Análise de Componentes Principais para reduzir o número de variáveis a um único índice representativo do conjunto de variáveis. O gráfico a seguir apresenta a variância explicada pelo PCA das três variáveis que compõem o índice de protagonismo programático. 
+
+
+
+---
+
+### Variância explicada pelas variáveis utilizadas no PCA 
+
+
+
+&lt;img src="variance_explained_plot.png" width="80%" /&gt;
+
+
+
+---
+
+## Criação do índice a partir do PCA
+- Uma vez que o "eigenvalue" foi calculado para cada uma das observações, foi realizada a média ponderada do valor atribuído a cada deputado, considerando os distintos pesos resultantes do PCA. 
+- Em uma segunda etapa, o valor resultante da média ponderada foi normalizado para que ficasse entre 0 e 1, facilitando a análise e a comparação dos dados entre os parlamentares.
+
+
+
+
+---
+
+### Distribuição dos parlamentares em relação ao índice de protagonismo programático
+
+![](Apresentação---Trabalho-Final_files/figure-html/Gráfico de distribuição parlamentares x protagonismo programático-1.png)&lt;!-- --&gt;
+
+---
+
+## Codificando deputados migrantes e não migrantes
+- Para entender os efeitos do protagonismo na migraçao partidária, os deputados que trocaram de partido na 56ª legislatura foram codificados como 1 e os não migrantes como 0. 
+- Considerando que a variável dependente (migração) é uma dummy, a regressão logística torna-se o modelo mais adequado para o teste da hipótese (níveis mais altos de protagonismo posicional diminuem a probabilidade de migração partidária). 
+
+
+
+---
+
+## Resultado da regressão 
+
+&lt;table class=" lightable-classic" style="color: black; font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+&lt;caption&gt;Resultados da Regressão Logística&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Estimate &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Std. Error &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; z value &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Pr(&amp;gt;|z|) &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Intercept) &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.7335019 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1179674 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -6.217836 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.00000 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; protagonismo_posicional &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -1.2228599 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.7803301 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -1.567106 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.11709 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+
+### Boxplot e gráfico de violino com resultados da diferença de médias 
+![](Apresentação---Trabalho-Final_files/figure-html/unnamed-chunk-1-1.png)&lt;!-- --&gt;
+
+---
+
+## Conclusões
+- O modelo de regressão logística não teve significância estatística para a variável de protagonismo programático; 
+- Apesar disso, quando o valor de protagonismo programático é 0, há significância estatística no sentido de haver maior probabilidade de migração (representado pelo valor-p do intercepto). 
+- A pequena diferença nas médias, apesar de não significativa, pode indicar uma tendência de que quanto maior o protagonismo, menos se migra.
+
+---
+
+## Próximos passos
+- Testar o índice de protagonismo programático e sua relação com a migração partidária para outras legislaturas; 
+- Construir e testar o índice de protagonismo posicional, com o fito de testar o impacto da ocupação de posições chave dentro da legislatura na migração partidária. 
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
