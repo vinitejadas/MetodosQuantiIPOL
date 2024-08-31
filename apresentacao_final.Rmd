@@ -1,0 +1,504 @@
+---
+title: "Análise do Protagonismo Programático e sua relação com Migração Partidária na Câmara dos Deputados (56ª Legislatura)"
+author: "Vinícius Tejadas Maia"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader: # Para os slides
+    css: default
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      countIncrementalSlides: false
+  html_document: # Para o relatório
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+---
+
+<style>
+.remark-slide-content img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+</style>
+
+
+## Objeto
+### Tema Central
+O objeto deste trabalho é a migração partidária, compreendida como a troca de partido político efetuada por parlamentar durante o exercício do mandato eletivo. 
+
+---
+
+## Questões de Pesquisa
+- Existe uma relação significativa entre o protagonismo programático e a migração partidária?
+- Qual a diferença no protagonismo programático entre deputados que migraram e os que não migraram?
+
+
+---
+
+## Objetivos
+1. Analisar a relação entre o protagonismo programático e os padrões de migração partidária na Câmara dos Deputados;
+    1.1. Criar índice de protagonismo programático a partir da Análise de Componentes Principais (PCA); 
+    1.2. Empreender testes estatísticos para entender a relação entre as duas variáveis (regressão logística, teste t e diferença entre médias).
+
+
+---
+
+## Contexto
+### Justificativa
+- A migração partidária é fenômeno capaz de alterar a correlação de forças entre os partidos dentro do Parlamento. Compreender os tipos de incentivos que ensejam a decisão de mudar de partido pode contribuir à literatura sobre Partidos Políticos e Estudos Legislativos ao sopesar como dinâmicas próprias da atuação legislativa e dos papéis desempenhados pelos legisladores podem influenciar a decisão pela migração partidária. 
+
+---
+
+## Método 
+### Coleta dos Dados
+- Os dados relacionados à construção do índice de protagonismo programático foram coletados da plataforma de Dados Abertos da Câmara dos Deputados; 
+- Os dados relacionados à migração partidária foram acessados via pedido de acesso à informação e fornecidos pela Câmara dos Deputados em formato excel. 
+
+```{r Coleta de Dados, include=FALSE}
+
+
+library(tidyverse)
+library(tidyr)
+library(readxl)
+library(readr)
+library(ggplot2)
+library(writexl)
+library(stringi)
+library(lubridate)
+library(purrr)
+library(httr)
+library(xml2)
+library(congressbr)
+library(jsonlite)
+library(openxlsx)
+
+
+# 1. Baixando as bases de dados de migração partidária ----
+
+migracoes_56leg <- read_excel("~/Library/CloudStorage/OneDrive-Pessoal/Mestrado IPOL UnB/Projeto Qualificação/dados_migracao_partidaria/Migração na Câmara/Filiação_partidária_56Leg.xlsx", 
+                              skip = 10)
+
+migracoes_55leg <- read_excel("~/Library/CloudStorage/OneDrive-Pessoal/Mestrado IPOL UnB/Projeto Qualificação/dados_migracao_partidaria/Migração na Câmara/Filiação_partidária_55Leg.xlsx", 
+                              skip = 10)
+
+migracoes_54leg <- read_excel("~/Library/CloudStorage/OneDrive-Pessoal/Mestrado IPOL UnB/Projeto Qualificação/dados_migracao_partidaria/Migração na Câmara/Filiação_partidária_54Leg.xlsx", 
+                              skip = 10)
+
+migracoes_53leg <- read_excel("~/Library/CloudStorage/OneDrive-Pessoal/Mestrado IPOL UnB/Projeto Qualificação/dados_migracao_partidaria/Migração na Câmara/Filiação_partidária_53Leg.xlsx", 
+                              skip = 10)
+
+migracoes_52leg <- read_excel("~/Library/CloudStorage/OneDrive-Pessoal/Mestrado IPOL UnB/Projeto Qualificação/dados_migracao_partidaria/Migração na Câmara/Filiação_partidária_52Leg.xlsx", 
+                              skip = 10)
+
+migracoes_total <- bind_rows(migracoes_52leg, migracoes_53leg, migracoes_54leg, migracoes_55leg, migracoes_56leg)
+
+## 1.1. Baixando os dados dos deputados pela API da Câmara ----
+
+deputados_56_legislatura <- read_excel("~/Library/CloudStorage/OneDrive-Pessoal/Mestrado IPOL UnB/Projeto Qualificação/deputados_56_legislatura.xlsx") 
+
+deputados_56_legislatura <- deputados_56_legislatura %>%
+  group_by(id, nome, siglaUf) %>%
+  summarise()
+
+## 1.2. Baixando dados de protagonismo posicional ----
+
+autoria_projetos_2019 <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/proposicoesAutores/csv/proposicoesAutores-2019.csv")
+
+autoria_projetos_2020 <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/proposicoesAutores/csv/proposicoesAutores-2020.csv")
+
+autoria_projetos_2021 <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/proposicoesAutores/csv/proposicoesAutores-2021.csv")
+
+autoria_projetos_2022 <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/proposicoesAutores/csv/proposicoesAutores-2022.csv")
+
+frentes <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/frentes/csv/frentes.csv")
+
+proposicoes_2019 <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/proposicoes/csv/proposicoes-2019.csv")
+
+proposicoes_2020 <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/proposicoes/csv/proposicoes-2020.csv")
+
+proposicoes_2021 <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/proposicoes/csv/proposicoes-2021.csv")
+
+proposicoes_2022 <- read_csv2("http://dadosabertos.camara.leg.br/arquivos/proposicoes/csv/proposicoes-2022.csv")
+
+```
+
+---
+
+### Manipulação dos dados
+- Os dados que constituem as variáveis "audiência pública", "autoria de PL e PLP" e "coordenação de frente parlamentar" foram agregados em números absolutos para cada parlamentar dentro da 56ª legislatura. A partir dos valores atribuídos a cada parlamentar, procedeu-se à Análise de Componentes Principais para elaboração do índice de protagonismo programático. Os gráficos a seguir representam a distribuição das variáveis a partir do z-valor. 
+
+```{r Manipulação dos Dados, include=FALSE}
+
+# 2. Limpando e manipulando os dados ----
+
+autoria_projetos_56_leg <- autoria_projetos_2019 %>%
+  bind_rows(autoria_projetos_2020, autoria_projetos_2021, autoria_projetos_2022)
+
+proposicoes_56_leg <- proposicoes_2019 %>%
+  bind_rows(proposicoes_2020, proposicoes_2021, proposicoes_2022)
+
+audiencias_publicas <- proposicoes_56_leg %>%
+  filter(descricaoTipo == "Requerimento de Audiência Pública") %>%
+  select(id, siglaTipo, ano, numero, codTipo, descricaoTipo) 
+
+#%% 2.1. Filtrando a autoria de deputados como autores principais
+autoria_projetos_56_leg <- autoria_projetos_56_leg %>%
+  filter(codTipoAutor == 10000,
+         proponente == 1) %>% 
+  select(idProposicao, idDeputadoAutor, codTipoAutor, nomeAutor, siglaPartidoAutor, ordemAssinatura, proponente)
+
+### 2.2. Adicionando autoria às audiências públicas ----
+
+audiencias_publicas <- audiencias_publicas %>% 
+  left_join(autoria_projetos_56_leg, by = c("id" = "idProposicao"))
+
+### 2.3. Filtrando autoria de Projetos de lei ordinária e lei complementar ----
+
+autoria_PL_PLP <- proposicoes_56_leg %>% 
+  filter(siglaTipo %in% c("PL", "PLP")) %>%
+  left_join(autoria_projetos_56_leg, by = c("id" = "idProposicao"))
+
+autoria_PL_PLP <- autoria_PL_PLP %>%
+  select(id, siglaTipo, numero, ano, codTipo, idDeputadoAutor, nomeAutor, proponente) %>%
+  filter(proponente == 1)
+
+## 2.4. Limpando o df de frentes parlamentares 
+
+frentes <- frentes %>%
+  select(id, titulo, dataCriacao, idLegislatura, coordenador_id, coordenador_nome, coordenador_idLegislatura) %>%
+  filter(idLegislatura == 56, 
+         coordenador_idLegislatura == 56)
+
+# 3. Construindo o df unificado para análise ---- 
+
+## 3.1. Somando os requerimentos de audiencia e PL/PLP por deputado ----
+
+soma_audiencia_publica <- audiencias_publicas %>%
+  group_by(idDeputadoAutor) %>%
+  summarise(soma_aud_publica = n())
+
+soma_PL_PLP <- autoria_PL_PLP %>%
+  group_by(idDeputadoAutor) %>%
+  summarise(soma_PL_PLP = n())
+
+soma_frentes <- frentes %>%
+  group_by(coordenador_id) %>%
+  summarise(soma_frentes = n()) 
+
+## 3.2. Juntando os df ----
+
+df.deputados_56_leg <- deputados_56_legislatura %>%
+  left_join(soma_audiencia_publica, by = c("id" = "idDeputadoAutor")) %>%
+  left_join(soma_PL_PLP, by = c("id" = "idDeputadoAutor")) %>%
+  left_join(soma_frentes, by = c("id" = "coordenador_id"))
+
+df.deputados_56_leg <- df.deputados_56_leg %>%
+  mutate(across(everything(), ~ replace_na(., 0)))
+```
+
+---
+
+### Distribuição dos deputados em relação à variável "audiencias_publicas"
+```{r Distribuição da variável audiência pública, echo=FALSE}
+# 4. Elaborando gráficos de distribuição para compreender o comportamento dos dados ----
+## 4.1. Calculando os Z-scores para cada variável ----
+df.deputados_56_leg$soma_aud_publica_z <- (df.deputados_56_leg$soma_aud_publica - mean(df.deputados_56_leg$soma_aud_publica)) / sd(df.deputados_56_leg$soma_aud_publica)
+df.deputados_56_leg$soma_PL_PLP_z <- (df.deputados_56_leg$soma_PL_PLP - mean(df.deputados_56_leg$soma_PL_PLP)) / sd(df.deputados_56_leg$soma_PL_PLP)
+df.deputados_56_leg$soma_frentes_z <- (df.deputados_56_leg$soma_frentes - mean(df.deputados_56_leg$soma_frentes)) / sd(df.deputados_56_leg$soma_frentes)
+
+### 4.1.1. Gráfico de distribuição Z para soma_aud_publica ----
+ggplot(data = df.deputados_56_leg, aes(x = soma_aud_publica_z)) +
+  geom_histogram(binwidth = 0.5, alpha=.5, fill = "blue", color = "black") +
+  labs(title = "Distribuição Z de soma_aud_publica",
+       x = "Z-score de Audiências Públicas",
+       y = "Frequência") +
+  theme_minimal() +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+```
+
+---
+
+### Distribuição dos deputados em relação à variável "autoria de PL e PLP"
+
+```{r Distribuição da variável autoria de PL e PLP, echo=FALSE}
+### 4.1.2. Gráfico de distribuição Z para soma_PL_PLP ----
+ggplot(data = df.deputados_56_leg, aes(x = soma_PL_PLP_z)) +
+  geom_histogram(binwidth = 0.5, alpha=.5, fill = "green", color = "black") +
+  labs(title = "Distribuição Z de soma_PL_PLP",
+       x = "Z-score de Projetos de Lei/PLP",
+       y = "Frequência") +
+  theme_minimal() + 
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+```
+
+---
+
+### Distribuição dos deputados em relação à variável "coordenação de frente parlamentar"
+
+```{r Distribuição da variável coordenação de frente parlamentar, echo=FALSE}
+### 4.1.3. Gráfico de distribuição Z para soma_frentes ----
+ggplot(data = df.deputados_56_leg, aes(x = soma_frentes_z)) +
+  geom_histogram(binwidth = 0.5, alpha=.5, fill = "red", color = "black") +
+  labs(title = "Distribuição Z de soma_frentes",
+       x = "Z-score de Frentes",
+       y = "Frequência") +
+  theme_minimal() + 
+  theme(plot.margin = unit(c(1, 2, 2, 2), "cm"))
+```
+
+---
+
+## Análise de Componentes Principais 
+
+- Para criar o índice de protagonismo, utilizou-se a Análise de Componentes Principais para reduzir o número de variáveis a um único índice representativo do conjunto de variáveis. O gráfico a seguir apresenta a variância explicada pelo PCA das três variáveis que compõem o índice de protagonismo programático. 
+
+```{r PCA, include=FALSE}
+# 5. Análise de componentes principais para criação do índice de protagonismo ----
+
+## 5.1. Baixando os pacotes para o PCA ----
+
+library(factoextra)
+library(FactoMineR)
+library(missMDA)
+
+
+df.deputados_56_leg_PCA <- df.deputados_56_leg %>%
+  select(-soma_aud_publica_z, -soma_PL_PLP_z, -soma_frentes_z)
+
+
+
+## 5.2. Selecionar apenas as colunas numéricas para a PCA ----
+PCA_col_numerias <- df.deputados_56_leg_PCA %>%
+  select(soma_aud_publica, soma_PL_PLP, soma_frentes)
+
+PCA_col_numerias <- PCA_col_numerias %>%
+  ungroup() %>%
+  select(-id, -nome)
+
+## 5.3. Realizar a PCA ----
+res.PCA <- PCA(PCA_col_numerias, graph = FALSE)
+
+## 5.4. Extrair as coordenadas dos componentes principais (PCs) ----
+pca_coords <- as.data.frame(res.PCA$ind$coord)
+
+## 5.5.  Adicionar os PCAs ao dataframe original, mantendo as colunas de identificação
+df.deputados_56_leg_PCA <- df.deputados_56_leg_PCA %>%
+  select(id, nome, siglaUf) %>%
+  bind_cols(pca_coords)
+
+## 5.6. Analisando os dados do PCA ----
+
+variance_explained <- as.data.frame(res.PCA$eig) %>%
+  rename(variance = eigenvalue, 
+         percent_variance = `percentage of variance`, 
+         cumulative_percent_variance = `cumulative percentage of variance`) %>%
+  mutate(Dim = row_number()) %>%
+  select(Dim, everything())
+
+# Visualizar os dados de variância explicada
+print(variance_explained)
+```
+
+---
+
+### Variância explicada pelas variáveis utilizadas no PCA 
+
+```{r Variância explicada (PCA), fig.height=4, fig.width=6, cache=FALSE, dev="png", include=FALSE}
+## 5.7. Visualizar graficamente a variância explicada ----
+g <- ggplot(variance_explained, aes(x = Dim, y = percent_variance)) +
+  geom_col(fill = "skyblue", alpha=.6) +
+  geom_line(aes(y = cumulative_percent_variance), color = "red", group = 1) +
+  geom_point(aes(y = cumulative_percent_variance), color = "red") +
+  labs(title = "Contribuição das dimensões para explicação da variância",
+       x = "Componentes Principais",
+       y = "Percentual de Variância Explicada (%)") +
+  theme_minimal() +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+ggsave("variance_explained_plot.png", plot = g, width = 6, height = 4, dpi = 300)
+
+
+
+```
+
+```{r include_plot, echo=FALSE, out.width="80%"}
+knitr::include_graphics("variance_explained_plot.png")
+```
+
+
+
+---
+
+## Criação do índice a partir do PCA
+- Uma vez que o "eigenvalue" foi calculado para cada uma das observações, foi realizada a média ponderada do valor atribuído a cada deputado, considerando os distintos pesos resultantes do PCA. 
+- Em uma segunda etapa, o valor resultante da média ponderada foi normalizado para que ficasse entre 0 e 1, facilitando a análise e a comparação dos dados entre os parlamentares.
+
+```{r Criação do índice de protagonismo programático, include=FALSE}
+# 6. Criando o índice de protagonismo posicional a partir do PCA ----
+## Considerando que a Dim 1 e Dim 2 explicam 80% da variação, o índice será construído a partir da média ponderada das duas dimensões. 
+
+# Calcular os pesos para Dim.1 e Dim.2
+w1 <- 49.37 / (49.37 + 31.17)
+w2 <- 31.17 / (49.37 + 31.17)
+
+# Criar a variável índice como uma média ponderada das dimensões 1 e 2
+df.deputados_56_leg_PCA <- df.deputados_56_leg_PCA %>%
+  mutate(indice = (w1 * Dim.1 + w2 * Dim.2) / (w1 + w2))
+
+## 6.1. Normalizando o índice entre 0 e 1 ----
+
+min_indice <- min(df.deputados_56_leg_PCA$indice, na.rm = TRUE)
+max_indice <- max(df.deputados_56_leg_PCA$indice, na.rm = TRUE)
+
+# Verificar os valores
+print(min_indice)
+print(max_indice)
+
+# Normalizar o índice
+df.deputados_56_leg_PCA <- df.deputados_56_leg_PCA %>%
+  mutate(protagonismo_posicional = (indice - min_indice) / (max_indice - min_indice))
+```
+
+
+---
+
+### Distribuição dos parlamentares em relação ao índice de protagonismo programático
+
+```{r Gráfico de distribuição parlamentares x protagonismo programático, echo=FALSE}
+## 6.2. Criando um gráfico de distribuição ----
+
+# Gerar o gráfico de distribuição do índice 'protagonismo_posicional'
+ggplot(df.deputados_56_leg_PCA, aes(x = protagonismo_posicional)) +
+  geom_histogram(binwidth = 0.05, fill = "skyblue", color = "black") +
+  labs(title = "Distribuição do Índice de Protagonismo Posicional",
+       x = "Protagonismo Posicional",
+       y = "Frequência") +
+  theme_minimal() + 
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+```
+
+---
+
+## Codificando deputados migrantes e não migrantes
+- Para entender os efeitos do protagonismo na migraçao partidária, os deputados que trocaram de partido na 56ª legislatura foram codificados como 1 e os não migrantes como 0. 
+- Considerando que a variável dependente (migração) é uma dummy, a regressão logística torna-se o modelo mais adequado para o teste da hipótese (níveis mais altos de protagonismo posicional diminuem a probabilidade de migração partidária). 
+
+```{r Regressão logística, correlação e teste t, echo=FALSE, include=FALSE}
+# 7. Adicionando a dummy de migração ao df com o índice de protagonismo para o teste de hipótese ----
+
+migracoes_56leg_dummy <- migracoes_56leg %>%
+  select(Deputado) %>%
+  mutate(migracao = case_when(Deputado == Deputado ~ 1, 
+                              TRUE ~ 0))
+
+df.deputados_56_leg_PCA <- df.deputados_56_leg_PCA %>%
+  left_join(migracoes_56leg_dummy, by = c("nome" = "Deputado")) 
+
+df.deputados_56_leg_PCA <- df.deputados_56_leg_PCA %>%
+  mutate(migracao = case_when(migracao == 1 ~ 1, 
+                              TRUE ~ 0))
+
+
+## 7.1. Excluindo duplicatas ----
+
+df.deputados_56_leg_PCA <- df.deputados_56_leg_PCA %>%
+  distinct(id, nome, .keep_all = TRUE)
+
+# 8. Fazendo regressão logística para entender a relação entre o índice de protagonsimo posicional e a migração partidária ----
+
+## 8.1. Testando a correlação entre protagonismo e migração ----
+
+# Calcular a correlação de Pearson
+
+cor_pearson <- cor(df.deputados_56_leg_PCA$protagonismo_posicional, df.deputados_56_leg_PCA$migracao, method = "pearson", use = "complete.obs")
+cor_pearson
+
+# Teste de significância da correlação 
+
+cor_test <- cor.test(df.deputados_56_leg_PCA$protagonismo_posicional, df.deputados_56_leg_PCA$migracao, method = "pearson")
+cor_test
+
+
+## 8.2. Ajustar o modelo de regressão logística ----
+modelo_logistico <- glm(migracao ~ protagonismo_posicional, data = df.deputados_56_leg_PCA, family = binomial)
+
+# Resumo do modelo
+summary(modelo_logistico)
+
+## 8.3. Identificando a excluindo possíveis outliers ----
+
+# Calcular Q1, Q3 e IQR
+Q1 <- quantile(df.deputados_56_leg_PCA$protagonismo_posicional, 0.25)
+Q3 <- quantile(df.deputados_56_leg_PCA$protagonismo_posicional, 0.75)
+IQR <- Q3 - Q1
+
+# Definir limites para outliers
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# Excluir outliers
+df.deputados_56_leg_PCA_sem_outliers <- df.deputados_56_leg_PCA %>%
+  filter(protagonismo_posicional >= lower_bound & protagonismo_posicional <= upper_bound)
+
+# Verificar quantos valores foram removidos
+n_outliers <- nrow(df.deputados_56_leg_PCA) - nrow(df.deputados_56_leg_PCA_sem_outliers)
+n_outliers
+
+# Rodando a regressão sem outliers ----
+
+modelo_logistico_sem_outliers <- glm(migracao ~ protagonismo_posicional, data = df.deputados_56_leg_PCA_sem_outliers, family = binomial)
+
+# Resumo do modelo
+summary(modelo_logistico_sem_outliers)
+
+# 9. Fazendo teste de diferença de médias ----
+
+teste_t <- t.test(protagonismo_posicional ~ migracao, data = df.deputados_56_leg_PCA)
+
+# Resumo do resultado
+teste_t
+
+```
+
+---
+
+## Resultado da regressão 
+
+```{r Resultado da regressão logística, echo=FALSE, message=FALSE, warning=FALSE}
+# Tabela da regressão formatada com kableExtra
+library(kableExtra)
+
+summary(modelo_logistico)$coefficients %>%
+  kbl(caption = "Resultados da Regressão Logística") %>%
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+---
+
+### Boxplot e gráfico de violino com resultados da diferença de médias 
+```{r echo=FALSE}
+ggplot(df.deputados_56_leg_PCA, aes(x = as.factor(migracao), y = protagonismo_posicional)) +
+  geom_violin(fill = "lightgreen", color = "black", alpha = 0.7) +
+  geom_boxplot(width = 0.1, fill = "lightblue", color = "black", alpha = 0.6) +
+  labs(title = "Gráfico de Violino do Índice de Protagonismo Posicional por Migração",
+       x = "Migração Partidária (0 = Não, 1 = Sim)",
+       y = "Protagonismo Posicional") +
+  theme_minimal() +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+```
+
+---
+
+## Conclusões
+- O modelo de regressão logística não teve significância estatística para a variável de protagonismo programático; 
+- Apesar disso, quando o valor de protagonismo programático é 0, há significância estatística no sentido de haver maior probabilidade de migração (representado pelo valor-p do intercepto). 
+- A pequena diferença nas médias, apesar de não significativa, pode indicar uma tendência de que quanto maior o protagonismo, menos se migra.
+
+---
+
+## Próximos passos
+- Testar o índice de protagonismo programático e sua relação com a migração partidária para outras legislaturas; 
+- Construir e testar o índice de protagonismo posicional, com o fito de testar o impacto da ocupação de posições chave dentro da legislatura na migração partidária. 
